@@ -4,9 +4,16 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from .models import Lead
-from .forms import LeadModelForm
+from .forms import LeadModelForm, CustomUserCreationForm
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 
+
+class SignupView(CreateView):
+  template_name = "registration/signup.html"
+  form_class = CustomUserCreationForm
+  
+  def get_success_url(self):
+    return reverse("login")
 
 class LandingPage(TemplateView):
   template_name = "landing.html"
