@@ -1,8 +1,11 @@
 from typing import Any, Dict
 from django.core.mail import send_mail
+from django.db import models
+from django.forms.models import BaseModelForm
+from django.http import HttpResponse
 from django.urls import reverse
 from .models import Lead, Category
-from .forms import LeadModelForm, CustomUserCreationForm, AssignAgentForm, LeadCategoryUpdateForm
+from .forms import LeadModelForm, CustomUserCreationForm, AssignAgentForm, LeadCategoryUpdateForm, CategoryModelForm
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 from agents.mixins import OrganisorAndLoginRequiredMixin
@@ -50,7 +53,6 @@ class LeadListView(LoginRequiredMixin, generic.ListView):
       })
     return context
     
-  
 
 
 class LeadDetailView(LoginRequiredMixin, generic.DetailView):
@@ -185,6 +187,59 @@ class CategoryDetailView(LoginRequiredMixin, generic.DetailView):
       )  
     return queryset
   
+class CategoryCreateView(OrganisorAndLoginRequiredMixin, generic.CreateView):
+  template_name = "leads/category_create.html"
+  form_class = CategoryModelForm
+  
+  def get_success_url(self):
+    return reverse("leads:category-list")
+  
+  def form_valid(self, form):
+    category = form.save(commit=False)
+    category.organisation = self.request.user.userprofile
+    category.save()
+    return super(CategoryCreateView, self).form_valid(form)
+
+
+class CategoryUpdateView(OrganisorAndLoginRequiredMixin, generic.UpdateView):
+  template_name = "leads/category_update.html"
+  form_class = CategoryModelForm
+  
+  def get_success_url(self):
+    return reverse("leads:category-list")
+  
+  def get_queryset(self):
+    user = self.request.user
+    if user.is_organisor:
+      queryset = Category.objects.filter(
+        organisation = user.userprofile
+      )
+    else:
+      queryset = Category.objects.filter(
+        organisation = user.agent.organisation
+      )
+    return queryset
+
+class CategoryDeleteView(OrganisorAndLoginRequiredMixin, generic.DeleteView):
+  template_name = "leads/category_delete.html"
+  
+  def get_success_url(self):
+    return reverse("leads:category-list")
+  
+  def get_queryset(self):
+    user = self.request.user
+    if user.is_organisor:
+      queryset = Category.objects.filter(
+        organisation = user.userprofile
+      )
+    else:
+      queryset = Category.objects.filter(
+        organisation = user.agent.organisation
+      )
+    return queryset
+  
+  
+   
 class LeadCategoryUpdateView(LoginRequiredMixin, generic.UpdateView):
   template_name = "leads/lead-category-update.html"
   form_class = LeadCategoryUpdateForm
