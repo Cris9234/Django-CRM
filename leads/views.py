@@ -9,6 +9,7 @@ from .forms import LeadModelForm, CustomUserCreationForm, AssignAgentForm, LeadC
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 from agents.mixins import OrganisorAndLoginRequiredMixin
+from django.db.models import Count
 
 class SignupView(generic.CreateView):
   template_name = "registration/signup.html"
@@ -145,8 +146,10 @@ class CategoryListView(LoginRequiredMixin, generic.ListView):
       queryset = Lead.objects.filter(
         organisation = user.agent.organisation
       )
+
     context.update({
-      "unassigned_lead_count": queryset.filter(category__isnull=True).count()
+      "unassigned_lead_count": queryset.filter(category__isnull=True).count(),
+      "category_lead_counts": queryset.values('category__name').annotate(total_leads=Count('category')),
     })
     return context
     
