@@ -9,9 +9,12 @@
       <p class="lg:w-2/3 mx-auto leading-relaxed text-base">
         There categories segment the leads
       </p>
-      <a href="{% url 'leads:category-create' %}" class="hover:text-blue-500">
-        Create category
-      </a>
+      {% if user.is_organisor %}
+        <a href="{% url 'leads:category-create' %}" class="hover:text-blue-500">
+          Create category
+        </a>
+      {% endif %}
+      
       <a href="{% url 'leads:lead-list' %}" class="hover:text-blue-500">
         Back to leads
       </a>
